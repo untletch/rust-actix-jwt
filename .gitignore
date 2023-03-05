@@ -1,0 +1,10 @@
+debug/
+target/
+Cargo.lock
+**/*.rs.bk
+
+.env
+__pycache__/
+*.py[cod]
+browser.txt
+venv/
