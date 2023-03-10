@@ -1,5 +1,3 @@
-use color_eyre::eyre::Result;
-
 #[derive(Debug, Clone)]
 pub struct Config {
     pub database_url: String,
@@ -9,16 +7,16 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn init() -> Result<Config> {
-        let database_url = std::env::var("DATABASE_UR")?;
-        let jwt_secret = std::env::var("JWT_SECRET")?;
-        let jwt_expires = std::env::var("JWT_EXPIRED_IN")?;
-        let jwt_maxage = std::env::var("JWT_MAXAGE")?;
+    pub fn init() -> Config {
+        let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+        let jwt_secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
+        let jwt_expires_in = std::env::var("JWT_EXPIRED_IN").expect("JWT_EXPIRES must be set");
+        let jwt_maxage = std::env::var("JWT_MAXAGE").expect("JWT_MAXAGE must be set");
         Config {
             database_url,
             jwt_secret,
             jwt_expires_in,
-            jwt_maxage: jwt_maxage.parse::<i32>()?,
+            jwt_maxage: jwt_maxage.parse::<i32>().unwrap(),
         }
     }
 }

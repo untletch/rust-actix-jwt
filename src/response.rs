@@ -10,8 +10,8 @@ pub struct FilteredUser {
     pub role: String,
     pub photo: String,
     pub verified: bool,
-    pub created_at: Datetime<Utc>,
-    pub updated_at: Datetime<Utc>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
 }
 
 #[derive(Serialize, Debug)]

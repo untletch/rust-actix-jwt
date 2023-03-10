@@ -4,7 +4,8 @@ use crate::{
     schema::{LoginUserSchema, RegisterUserSchema, TokenClaims},
     response::FilteredUser,
     AppState,
-}
+};
+
 use actix_web::{
     cookie::{time::Duration as ActixWebDuration, Cookie},
     get, post, web, HttpMessage, HttpRequest, HttpResponse, Responder
@@ -13,6 +14,7 @@ use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
+
 use chrono::{prelude::*, Duration};
 use jsonwebtoken::{encode, EncodingKey, Header};
 use serde_json::json;
@@ -42,7 +44,7 @@ async fn register_user_handler(
     body: web::Json<RegisterUserSchema>,
     data: web::Data<AppState>,
 ) -> impl Responder {
-    let exists: bool = sqlx::query("SELECT EXISTS(SELECT 1 FROM users WHERE EMAIL = $1)")
+    let exists: bool = sqlx::query("SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)")
         .bind(body.email.to_owned())
         .fetch_one(&data.db)
         .await
@@ -57,20 +59,20 @@ async fn register_user_handler(
     let hashed_password = Argon2::default()
         .hash_password(body.password.as_bytes(), &salt)
         .expect("Error while hashing password")
-        .to_string()
-        let query_result = sqlx::query_as!(
-            User,
-            "INSERT INTO users (name,email,password) VALUES ($1,$2,$3)RETURNING *",
-            body.name.to_string(),
-            body.email.to_string().to_lowercase(),
-            hashed_password
-        )
-        .fetch_one(&data.db)
-        .await;
+        .to_string();
+    let query_result = sqlx::query_as!(
+        User,
+        "INSERT INTO users (name,email,password) VALUES ($1, $2, $3) RETURNING *",
+        body.name.to_string(),
+        body.email.to_string().to_lowercase(),
+        hashed_password
+    )
+    .fetch_one(&data.db)
+    .await;
 
     match query_result {
         Ok(user) => {
-            let user_response = serde_json::json!({"status": "success","data":serde_json::json!({
+            let user_response = serde_json::json!({"status": "success","data": serde_json::json!({
                 "user": filter_user_record(&user)
             })});
             return HttpResponse::Ok().json(user_response);
@@ -87,7 +89,7 @@ async fn login_user_handler(
     body: web::Json<LoginUserSchema>,
     data: web::Data<AppState>,
 ) -> impl Responder {
-    let query_result = sqlx::query_as!(User, "SELECT * FROM user WHERE email = $1", body.email)
+    let query_result = sqlx::query_as!(User, "SELECT * FROM users WHERE email = $1", body.email)
         .fetch_optional(&data.db)
         .await
         .unwrap();
@@ -161,7 +163,7 @@ async fn get_me_handler(
         .unwrap();
 
     let json_response = serde_json::json!({
-        "status": "success";
+        "status": "success",
         "data": serde_json::json!({
             "user": filter_user_record(&user)
         })
@@ -175,7 +177,7 @@ pub fn config(conf: &mut web::ServiceConfig) {
         .service(health_checker_handler)
         .service(register_user_handler)
         .service(login_user_handler)
-        .service(logout_user_handler)
+        .service(logout_handler)
         .service(get_me_handler);
     conf.service(scope);
 }

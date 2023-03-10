@@ -1,14 +1,13 @@
 use core::fmt;
 use std::future::{ready, Ready};
 
+use crate::schema::TokenClaims;
+use crate::AppState;
 use actix_web::error::ErrorUnauthorized;
 use actix_web::{dev::Payload, Error as ActixWebError};
 use actix_web::{http, web, FromRequest, HttpMessage, HttpRequest};
 use jsonwebtoken::{decode, DecodingKey, Validation};
 use serde::Serialize;
-use schema::TokenClaims;
-use crate::AppState;
-use crate::model::TokenClaims;
 
 #[derive(Debug, Serialize)]
 struct ErrorResponse {
@@ -23,7 +22,7 @@ impl fmt::Display for ErrorResponse {
 }
 
 pub struct JwtMiddleware {
-    pub user_id: uuid:Uuid,
+    pub user_id: uuid::Uuid,
 }
 
 impl FromRequest for JwtMiddleware {
@@ -43,16 +42,16 @@ impl FromRequest for JwtMiddleware {
         if token.is_none() {
             let json_error = ErrorResponse {
                 status: "fail".to_string(),
-                message: "You are not logged in, please provide token".to_string()
-            }
-            return ready(Err(ErrUnauthorized(json_error)));
+                message: "You are not logged in, please provide token".to_string(),
+            };
+            return ready(Err(ErrorUnauthorized(json_error)));
         }
 
         let claims = match decode::<TokenClaims>(
             &token.unwrap(),
             &DecodingKey::from_secret(data.env.jwt_secret.as_ref()),
             &Validation::default(),
-        ){
+        ) {
             Ok(c) => c.claims,
             Err(_) => {
                 let json_error = ErrorResponse {
@@ -66,6 +65,6 @@ impl FromRequest for JwtMiddleware {
         let user_id = uuid::Uuid::parse_str(claims.sub.as_str()).unwrap();
         req.extensions_mut()
             .insert::<uuid::Uuid>(user_id.to_owned());
-        ready(Ok(JwtMiddleware{user_id}))
+        ready(Ok(JwtMiddleware { user_id }))
     }
 }
