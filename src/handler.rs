@@ -33,7 +33,7 @@ fn filter_user_record(user: &User) -> FilteredUser {
     }
 }
 
-#[get("/api/healthchecker")]
+#[get("/healthchecker")]
 async fn health_checker_handler() -> impl Responder {
     const MESSAGE: &str = "JWT Authentication in Rust using Actix-web";
     HttpResponse::Ok().json(serde_json::json!({"status": "success", "message": MESSAGE}))
@@ -75,7 +75,7 @@ async fn register_user_handler(
             let user_response = serde_json::json!({"status": "success","data": serde_json::json!({
                 "user": filter_user_record(&user)
             })});
-            return HttpResponse::Ok().json(user_response);
+            return HttpResponse::Created().json(user_response);
         }
         Err(e) => {
             return HttpResponse::InternalServerError()
