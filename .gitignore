@@ -8,3 +8,6 @@ __pycache__/
 *.py[cod]
 browser.txt
 venv/
+
+tests/*
+!tests/main_test.py
